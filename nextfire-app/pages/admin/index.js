@@ -1,8 +1,10 @@
+import Metatags from "../../components/metatags";
+
 export default function AdminPostsPage({}) {
-    return (
-      <main>
-        <h1>Admin Post</h1>
-      </main>
-    );
-  }
-  
+  return (
+    <main>
+      <Metatags title="admin page" />
+      <h1>Admin Post</h1>
+    </main>
+  );
+}

@@ -52,6 +52,7 @@ export default function Post(props) {
 
   return (
     <main className={styles.container}>
+      <Metatags title="userpage" />
       <section>
         <PostContent post={post} />
       </section>
