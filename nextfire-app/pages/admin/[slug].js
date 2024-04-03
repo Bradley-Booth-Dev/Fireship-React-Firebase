@@ -1,6 +1,7 @@
 import styles from "../../styles/Admin.module.css";
 import AuthCheck from "../../components/AuthCheck";
 import { firestore, auth, serverTimestamp } from "../../lib/firebase";
+import ImageUploader from "../../components/ImageUploader.js";
 
 import { useState } from "react";
 import { useRouter } from "next/router";
@@ -30,7 +31,7 @@ function PostManager() {
     .doc(auth.currentUser.uid)
     .collection("posts")
     .doc(slug);
-  const [post] = useDocumentData(postRef);
+  const [post] = useDocumentDataOnce(postRef);
 
   return (
     <main className={styles.container}>
@@ -55,6 +56,7 @@ function PostManager() {
             <Link href={`/${post.username}/${post.slug}`}>
               <button className="btn-blue">Live view</button>
             </Link>
+            <DeletePostButton postRef={postRef} />
           </aside>
         </>
       )}
@@ -63,14 +65,7 @@ function PostManager() {
 }
 
 function PostForm({ defaultValues, postRef, preview }) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState,
-    formState: { errors },
-  } = useForm({
+  const { register, errors, handleSubmit, formState, reset, watch } = useForm({
     defaultValues,
     mode: "onChange",
   });
@@ -98,26 +93,31 @@ function PostForm({ defaultValues, postRef, preview }) {
       )}
 
       <div className={preview ? styles.hidden : styles.controls}>
+        <ImageUploader />
+
         <textarea
-          className="form-control"
-          {...register("content", {
-            // Name of the field is 'content'
-            maxLength: { value: 20000, message: "Content is too long" },
-            minLength: { value: 10, message: "Content is too short" },
-            required: { value: true, message: "Content is required" },
+          name="content"
+          ref={register({
+            maxLength: { value: 20000, message: "content is too long" },
+            minLength: { value: 10, message: "content is too short" },
+            required: { value: true, message: "content is required" },
           })}
-        />
+        ></textarea>
+
         {errors.content && (
           <p className="text-danger">{errors.content.message}</p>
         )}
+
         <fieldset>
           <input
             className={styles.checkbox}
+            name="published"
             type="checkbox"
-            {...register("published")}
+            ref={register}
           />
           <label>Published</label>
         </fieldset>
+
         <button
           type="submit"
           className="btn-green"
@@ -127,5 +127,24 @@ function PostForm({ defaultValues, postRef, preview }) {
         </button>
       </div>
     </form>
+  );
+}
+
+function DeletePostButton({ postRef }) {
+  const router = useRouter();
+
+  const deletePost = async () => {
+    const doIt = confirm("are you sure!");
+    if (doIt) {
+      await postRef.delete();
+      router.push("/admin");
+      toast("post annihilated ", { icon: "🗑️" });
+    }
+  };
+
+  return (
+    <button className="btn-red" onClick={deletePost}>
+      Delete
+    </button>
   );
 }
